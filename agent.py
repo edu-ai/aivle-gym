@@ -1,6 +1,6 @@
 import gym
 
-from agent_side_env import AgentEnv
+from aivle_gym.agent_env import AgentEnv
 from serializer import CartPoleEnvSerializer
 
 

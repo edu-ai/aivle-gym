@@ -4,7 +4,7 @@ import json
 import gym
 import zmq
 
-import serializers
+from aivle_gym.env_serializer import EnvSerializer
 
 
 class JudgeEnv(gym.Env):
@@ -17,9 +17,9 @@ class JudgeEnv(gym.Env):
     action_space = None
     observation_space = None
 
-    def __init__(self, serializer: serializers.EnvSerializer, port: int = 5555):
+    def __init__(self, serializer: EnvSerializer, port: int = 5555):
         assert isinstance(port, int)
-        assert isinstance(serializer, serializers.EnvSerializer)
+        assert isinstance(serializer, EnvSerializer)
         self.serializer = serializer
         context = zmq.Context()
         self.socket = context.socket(zmq.REP)
@@ -66,19 +66,3 @@ class JudgeEnv(gym.Env):
 
     def seed(self, seed=None):  # TODO
         pass
-
-
-class SampleJudgeEnv(JudgeEnv):
-    def step(self, action):
-        return [1, 2, 3], 0.5, False, str(action)
-
-    def reset(self):
-        return [1, 2, 3]
-
-    def render(self, mode='human'):
-        pass
-
-
-if __name__ == "__main__":
-    env = SampleJudgeEnv(serializer=serializers.SampleSerializer())
-    env.start()

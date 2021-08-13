@@ -1,7 +1,7 @@
 import gym
 
-from example.serializer import CartPoleEnvSerializer
-from judge_side_env import JudgeEnv
+from aivle_gym.judge_env import JudgeEnv
+from serializer import CartPoleEnvSerializer
 
 
 class CartPoleJudgeEnv(JudgeEnv):

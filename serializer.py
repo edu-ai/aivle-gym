@@ -1,6 +1,6 @@
 import numpy
 
-from serializers import EnvSerializer
+from aivle_gym.env_serializer import EnvSerializer
 
 
 class CartPoleEnvSerializer(EnvSerializer):

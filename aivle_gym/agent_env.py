@@ -4,8 +4,7 @@ from typing import Tuple, Any
 import gym
 import zmq
 
-import serializers
-from serializers import EnvSerializer
+from aivle_gym.env_serializer import EnvSerializer
 
 
 class NotAllowedToReset(Exception):
@@ -85,13 +84,3 @@ class AgentEnv(gym.Env):
         done = ordi_json['done']
         info = ordi_json['info']
         return self.serializer.json_to_observation(obs), reward, done, self.serializer.json_to_info(info)
-
-
-def main():
-    env = AgentEnv(serializer=serializers.SampleSerializer())
-    env.step("A")
-    env.reset()
-
-
-if __name__ == "__main__":
-    main()
