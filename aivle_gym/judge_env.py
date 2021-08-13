@@ -1,5 +1,6 @@
 import abc
 import json
+import logging
 
 import gym
 import zmq
@@ -10,17 +11,15 @@ from aivle_gym.env_serializer import EnvSerializer
 class JudgeEnv(gym.Env):
     # Set this in SOME subclasses
     metadata = {'render.modes': []}
-    reward_range = (-float('inf'), float('inf'))
     spec = None
 
-    # Set these in ALL subclasses
-    action_space = None
-    observation_space = None
-
-    def __init__(self, serializer: EnvSerializer, port: int = 5555):
+    def __init__(self, serializer: EnvSerializer, action_space, observation_space, reward_range, port: int = 5555):
         assert isinstance(port, int)
         assert isinstance(serializer, EnvSerializer)
         self.serializer = serializer
+        self.action_space = action_space
+        self.observation_space = observation_space
+        self.reward_range = reward_range
         context = zmq.Context()
         self.socket = context.socket(zmq.REP)
         self.socket.bind(f"tcp://*:{port}")
@@ -47,7 +46,7 @@ class JudgeEnv(gym.Env):
                 }))
             else:
                 pass
-            print(f"Received request: {json.loads(message)}")
+            logging.debug(f"Received request: {json.loads(message)}")
 
     @abc.abstractmethod
     def step(self, action):

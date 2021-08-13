@@ -1,4 +1,5 @@
 import json
+import logging
 from typing import Tuple, Any
 
 import gym
@@ -49,14 +50,14 @@ class AgentEnv(gym.Env):
 
         Returns: (observation, reward, done, info)
         """
-        print(f"requesting to step with action {action}")
+        logging.debug(f"requesting to step with action {action}")
         self.socket.send_string(json.dumps({
             "method": "step",
             "action": self.serializer.action_to_json(action)
         }))
         msg = self.socket.recv_string()
         obs, reward, done, info = self._json_to_ordi(json.loads(msg))
-        print(f"obs: {obs}, reward: {reward}, done: {done}, info: {info}")
+        logging.debug(f"obs: {obs}, reward: {reward}, done: {done}, info: {info}")
         return obs, reward, done, info
 
     def _remote_reset(self) -> Tuple[bool, Any]:
@@ -66,13 +67,13 @@ class AgentEnv(gym.Env):
             accepted (bool): whether the reset request is accepted by the remote\n
             observation (object): if accepted, initial observation will be returned
         """
-        print(f"requesting to reset")
+        logging.debug(f"requesting to reset")
         self.socket.send_string(json.dumps({
             "method": "reset"
         }))
         msg = self.socket.recv_string()
         obj = json.loads(msg)
-        print(f"reset response: {obj}")
+        logging.debug(f"reset response: {obj}")
         if obj["accepted"]:
             return True, self.serializer.json_to_observation(obj["observation"])
         else:
