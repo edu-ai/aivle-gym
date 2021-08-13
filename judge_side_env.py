@@ -8,6 +8,15 @@ import serializers
 
 
 class JudgeEnv(gym.Env):
+    # Set this in SOME subclasses
+    metadata = {'render.modes': []}
+    reward_range = (-float('inf'), float('inf'))
+    spec = None
+
+    # Set these in ALL subclasses
+    action_space = None
+    observation_space = None
+
     def __init__(self, serializer: serializers.EnvSerializer, port: int = 5555):
         assert isinstance(port, int)
         assert isinstance(serializer, serializers.EnvSerializer)
@@ -50,6 +59,12 @@ class JudgeEnv(gym.Env):
 
     @abc.abstractmethod
     def render(self, mode='human'):
+        pass
+
+    def close(self):  # TODO
+        pass
+
+    def seed(self, seed=None):  # TODO
         pass
 
 

@@ -13,7 +13,14 @@ class NotAllowedToReset(Exception):
 
 
 class AgentEnv(gym.Env):
-    def __init__(self, serializer: EnvSerializer, port=5555):
+    # Set this in SOME subclasses
+    metadata = {'render.modes': []}
+    spec = None
+
+    def __init__(self, serializer: EnvSerializer, action_space, observation_space, reward_range, port=5555):
+        self.action_space = action_space
+        self.observation_space = observation_space
+        self.reward_range = reward_range
         self.serializer = serializer
         assert isinstance(port, int)
         context = zmq.Context()
@@ -68,7 +75,7 @@ class AgentEnv(gym.Env):
         obj = json.loads(msg)
         print(f"reset response: {obj}")
         if obj["accepted"]:
-            return True, obj["observation"]
+            return True, self.serializer.json_to_observation(obj["observation"])
         else:
             return False, None
 
