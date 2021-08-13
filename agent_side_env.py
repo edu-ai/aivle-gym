@@ -1,17 +1,20 @@
-import abc
 import json
 from typing import Tuple, Any
 
 import gym
 import zmq
 
+import serializers
+from serializers import EnvSerializer
+
 
 class NotAllowedToReset(Exception):
     pass
 
 
-class AgentEnv(gym.Env, metaclass=abc.ABCMeta):
-    def __init__(self, port=5555):
+class AgentEnv(gym.Env):
+    def __init__(self, serializer: EnvSerializer, port=5555):
+        self.serializer = serializer
         assert isinstance(port, int)
         context = zmq.Context()
         self.socket = context.socket(zmq.REQ)
@@ -43,7 +46,7 @@ class AgentEnv(gym.Env, metaclass=abc.ABCMeta):
         print(f"requesting to step with action {action}")
         self.socket.send_string(json.dumps({
             "method": "step",
-            "args": self._action_to_json(action)
+            "action": self.serializer.action_to_json(action)
         }))
         msg = self.socket.recv_string()
         obs, reward, done, info = self._json_to_ordi(json.loads(msg))
@@ -74,85 +77,11 @@ class AgentEnv(gym.Env, metaclass=abc.ABCMeta):
         reward = ordi_json['reward']
         done = ordi_json['done']
         info = ordi_json['info']
-        return self._json_to_observation(obs), reward, done, self._json_to_info(info)
-
-    @abc.abstractmethod
-    def _action_to_json(self, action):
-        """Transform action into serializable object (i.e. can be serailized using json.dump())
-
-        :param action:
-        :return action_json:
-        """
-        pass
-
-    @abc.abstractmethod
-    def _json_to_action(self, action_json):
-        """Transform serializable object into action native to Gym environment
-
-        :param action_json:
-        :return action_gym:
-        """
-        pass
-
-    @abc.abstractmethod
-    def _observation_to_json(self, obs):
-        """Transform observation into serializable object (i.e. can be serailized using json.dump())
-
-        :param obs:
-        :return obs_json:
-        """
-        pass
-
-    @abc.abstractmethod
-    def _json_to_observation(self, obs_json):
-        """Transform serializable object into observation native to Gym environment
-
-        :param obs_json:
-        :return obs_gym:
-        """
-        pass
-
-    @abc.abstractmethod
-    def _info_to_json(self, info):
-        """Transform info into serializable object (i.e. can be serailized using json.dump())
-
-        :param info:
-        :return info_json:
-        """
-        pass
-
-    @abc.abstractmethod
-    def _json_to_info(self, info_json):
-        """Transform serializable object into info native to Gym environment
-
-        :param info_json:
-        :return info_gym:
-        """
-        pass
-
-
-class SampleAgentEnv(AgentEnv):
-    def _action_to_json(self, action):
-        return action
-
-    def _json_to_action(self, action_json):
-        return action_json
-
-    def _observation_to_json(self, obs):
-        return obs
-
-    def _json_to_observation(self, obs_json):
-        return obs_json
-
-    def _info_to_json(self, info):
-        return info
-
-    def _json_to_info(self, info_json):
-        return info_json
+        return self.serializer.json_to_observation(obs), reward, done, self.serializer.json_to_info(info)
 
 
 def main():
-    env = SampleAgentEnv()
+    env = AgentEnv(serializer=serializers.SampleSerializer())
     env.step("A")
     env.reset()
 
