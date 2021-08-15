@@ -1,0 +1,116 @@
+import abc
+import json
+import logging
+from enum import Enum
+
+import zmq
+
+from aivle_gym.env_serializer import EnvSerializer
+from aivle_gym.judge_env_base import JudgeEnvBase
+
+
+class _State(Enum):
+    INITIAL = 1
+    WAIT_RESET = 2
+    WAIT_ACTION = 3
+    STEP = 4
+    READY = 5
+
+
+class JudgeMultiEnv(JudgeEnvBase, metaclass=abc.ABCMeta):
+    # Set this in SOME subclasses
+    metadata = {'render.modes': []}
+    spec = None
+
+    def __init__(self, serializer: EnvSerializer, action_space, observation_space, reward_range, n_agent, uid_to_idx,
+                 port: int = 5555):
+        super().__init__(serializer, action_space, observation_space, reward_range, port)
+        context = zmq.Context()
+        self.socket = context.socket(zmq.ROUTER)
+        self.socket.bind(f"tcp://*:{self.port}")
+        assert isinstance(n_agent, int)
+        assert n_agent >= 2  # use normal JudgeEnv for single-agent task
+        self.n_agent = n_agent
+        self.uid_to_idx = uid_to_idx
+
+        self.can_reset = True  # at the beginning,
+        self.state = _State.INITIAL
+
+    def start(self):
+        # episode can be started only after all agents have called "reset"
+        # all agents can call reset once at the beginning of each episode
+        # episode is started by the first "reset" received by any one of the agents
+        init_obs_n = None
+        has_reset = [False for _ in range(self.n_agent)]
+        reset_idx_to_rid = {}
+        # step is started by the first "step" received by any one of the agents
+        action_n = [None for _ in range(self.n_agent)]
+        has_stepped = [False for _ in range(self.n_agent)]
+        step_idx_to_rid = {}  # map from idx to route ID
+
+        while True:
+            rid, delim, message = self.socket.recv_multipart()
+            req = json.loads(message)
+            method = req["method"]
+            idx = self.uid_to_idx[req["uid"]]
+            if method == "step":
+                if self.state == _State.WAIT_ACTION:
+                    if has_stepped[idx]:
+                        raise Exception("this should not happen as agent socket is synchrounous...")  # TODO
+                    has_stepped[idx] = True
+                    step_idx_to_rid[idx] = rid
+                    action_n[idx] = self.serializer.json_to_action(req["action"])
+                    if not (False in has_stepped):  # when all agents have taken an action, step in the underlying env
+                        self.state = _State.STEP
+                        obs_n, reward_n, done_n, info = self.step(action_n)
+                        for i in range(self.n_agent):
+                            resp = {
+                                "observation": self.serializer.observation_to_json(obs_n[i]),
+                                "reward": reward_n[i],
+                                "done": done_n[i],
+                                "info": self.serializer.info_to_json(info)
+                            }
+                            self.socket.send_multipart([step_idx_to_rid[i], delim, json.dumps(resp).encode("utf-8")])
+                        if not (False in done_n):
+                            self.state = _State.INITIAL
+                        else:
+                            self.state = _State.WAIT_ACTION
+                        action_n = [None for _ in range(self.n_agent)]
+                        has_stepped = [False for _ in range(self.n_agent)]
+                        step_idx_to_rid = {}  # map from idx to route ID
+                else:
+                    raise Exception(f"Unexpected step state: {self.state}")
+            elif method == "reset":
+                if self.state == _State.INITIAL:
+                    self.state = _State.WAIT_RESET
+                    init_obs_n = self.reset()
+                    has_reset[idx] = True
+                    reset_idx_to_rid[idx] = rid
+                elif self.state == _State.WAIT_RESET:
+                    if has_reset[idx]:  # syncronously reject invalid request
+                        self.socket.send_multipart([rid, delim, json.dumps({
+                            "accepted": False
+                        }).encode("utf-8")])
+                    else:
+                        has_reset[idx] = True
+                        reset_idx_to_rid[idx] = rid
+                        if not (False in has_reset):
+                            # when all agents have called "reset", the episode is started
+                            self.state = _State.WAIT_ACTION
+                            # send initial observation to each agent at the same time
+                            for i in range(self.n_agent):
+                                self.socket.send_multipart([reset_idx_to_rid[i], delim, json.dumps({
+                                    "accepted": True,
+                                    "observation": self.serializer.observation_to_json(init_obs_n[idx])
+                                }).encode("utf-8")])
+                            # cleanup
+                            init_obs_n = None
+                            has_reset = [False for _ in range(self.n_agent)]
+                            reset_idx_to_rid = {}
+                else:
+                    has_reset[idx] = True
+                    reset_idx_to_rid[idx] = rid
+                    pass
+            else:
+                pass
+            logging.debug(f"Received request from {req['uid']}: {json.loads(message)}")

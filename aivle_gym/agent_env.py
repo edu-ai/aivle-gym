@@ -17,12 +17,14 @@ class AgentEnv(gym.Env):
     metadata = {'render.modes': []}
     spec = None
 
-    def __init__(self, serializer: EnvSerializer, action_space, observation_space, reward_range, port=5555):
+    def __init__(self, serializer: EnvSerializer, action_space, observation_space, reward_range, uid, port=5555):
+        self.uid = uid
         self.action_space = action_space
         self.observation_space = observation_space
         self.reward_range = reward_range
         self.serializer = serializer
         assert isinstance(port, int)
+        assert isinstance(uid, int)
         context = zmq.Context()
         self.socket = context.socket(zmq.REQ)
         self.socket.connect(f"tcp://localhost:{port}")
@@ -42,6 +44,12 @@ class AgentEnv(gym.Env):
         """
         pass
 
+    def close(self):
+        pass  # TODO
+
+    def seed(self, seed=None):
+        pass  # TODO
+
     def _remote_step(self, action) -> Tuple[Any, float, bool, dict]:
         """Request remote to take an action
 
@@ -52,6 +60,7 @@ class AgentEnv(gym.Env):
         """
         logging.debug(f"requesting to step with action {action}")
         self.socket.send_string(json.dumps({
+            "uid": self.uid,
             "method": "step",
             "action": self.serializer.action_to_json(action)
         }))
@@ -69,6 +78,7 @@ class AgentEnv(gym.Env):
         """
         logging.debug(f"requesting to reset")
         self.socket.send_string(json.dumps({
+            "uid": self.uid,
             "method": "reset"
         }))
         msg = self.socket.recv_string()

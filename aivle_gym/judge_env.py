@@ -2,27 +2,22 @@ import abc
 import json
 import logging
 
-import gym
 import zmq
 
 from aivle_gym.env_serializer import EnvSerializer
+from aivle_gym.judge_env_base import JudgeEnvBase
 
 
-class JudgeEnv(gym.Env):
+class JudgeEnv(JudgeEnvBase, metaclass=abc.ABCMeta):
     # Set this in SOME subclasses
     metadata = {'render.modes': []}
     spec = None
 
     def __init__(self, serializer: EnvSerializer, action_space, observation_space, reward_range, port: int = 5555):
-        assert isinstance(port, int)
-        assert isinstance(serializer, EnvSerializer)
-        self.serializer = serializer
-        self.action_space = action_space
-        self.observation_space = observation_space
-        self.reward_range = reward_range
+        super().__init__(serializer, action_space, observation_space, reward_range, port)
         context = zmq.Context()
         self.socket = context.socket(zmq.REP)
-        self.socket.bind(f"tcp://*:{port}")
+        self.socket.bind(f"tcp://*:{self.port}")
 
     def start(self):
         while True:
@@ -46,22 +41,4 @@ class JudgeEnv(gym.Env):
                 }))
             else:
                 pass
-            logging.debug(f"Received request: {json.loads(message)}")
-
-    @abc.abstractmethod
-    def step(self, action):
-        pass
-
-    @abc.abstractmethod
-    def reset(self):
-        pass
-
-    @abc.abstractmethod
-    def render(self, mode='human'):
-        pass
-
-    def close(self):  # TODO
-        pass
-
-    def seed(self, seed=None):  # TODO
-        pass
+            logging.debug(f"Received request from {req['uid']}: {json.loads(message)}")
