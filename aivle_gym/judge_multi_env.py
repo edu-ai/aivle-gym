@@ -10,11 +10,14 @@ from aivle_gym.judge_env_base import JudgeEnvBase
 
 
 class _State(Enum):
+    """Multi-agent environment in aiVLE maintains a finite state machine (FSM)
+    with the following states. Details about these states and transitions please
+    refer to the documentation.
+    """
     INITIAL = 1
     WAIT_RESET = 2
     WAIT_ACTION = 3
     STEP = 4
-    READY = 5
 
 
 class JudgeMultiEnv(JudgeEnvBase, metaclass=abc.ABCMeta):
