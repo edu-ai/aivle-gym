@@ -13,6 +13,7 @@ class _State(Enum):
     """Multi-agent environment in aiVLE maintains a finite state machine (FSM)
     with the following states. Details about these states and transitions please
     refer to the documentation.
+    https://pvzuww1vqx.larksuite.com/docs/docusSYdnLXZBojin39b8DGzKMT#StIDRG
     """
     INITIAL = 1
     WAIT_RESET = 2
@@ -36,7 +37,7 @@ class JudgeMultiEnv(JudgeEnvBase, metaclass=abc.ABCMeta):
         self.n_agents = n_agents
         self.uid_to_idx = uid_to_idx
 
-        self.can_reset = True  # at the beginning,
+        self.can_reset = True
         self.state = _State.INITIAL
 
     def start(self):
@@ -45,11 +46,12 @@ class JudgeMultiEnv(JudgeEnvBase, metaclass=abc.ABCMeta):
         # episode is started by the first "reset" received by any one of the agents
         init_obs_n = None
         has_reset = [False for _ in range(self.n_agents)]
-        reset_idx_to_rid = {}
+        reset_idx_to_rid = {}  # map from agent index to router ID
         # step is started by the first "step" received by any one of the agents
+        # step is responded after all agents have stepped
         action_n = [None for _ in range(self.n_agents)]
         has_stepped = [False for _ in range(self.n_agents)]
-        step_idx_to_rid = {}  # map from idx to route ID
+        step_idx_to_rid = {}  # map from agent index to router ID
 
         while True:
             rid, delim, message = self.socket.recv_multipart()
@@ -80,7 +82,7 @@ class JudgeMultiEnv(JudgeEnvBase, metaclass=abc.ABCMeta):
                             self.state = _State.WAIT_ACTION
                         action_n = [None for _ in range(self.n_agents)]
                         has_stepped = [False for _ in range(self.n_agents)]
-                        step_idx_to_rid = {}  # map from idx to route ID
+                        step_idx_to_rid = {}
                 else:
                     raise Exception(f"Unexpected step state: {self.state}")
             elif method == "reset":
@@ -90,7 +92,7 @@ class JudgeMultiEnv(JudgeEnvBase, metaclass=abc.ABCMeta):
                     has_reset[idx] = True
                     reset_idx_to_rid[idx] = rid
                 elif self.state == _State.WAIT_RESET:
-                    if has_reset[idx]:  # syncronously reject invalid request
+                    if has_reset[idx]:  # immediately reject invalid request
                         self.socket.send_multipart([rid, delim, json.dumps({
                             "accepted": False
                         }).encode("utf-8")])
