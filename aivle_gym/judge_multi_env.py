@@ -25,15 +25,15 @@ class JudgeMultiEnv(JudgeEnvBase, metaclass=abc.ABCMeta):
     metadata = {'render.modes': []}
     spec = None
 
-    def __init__(self, serializer: EnvSerializer, action_space, observation_space, reward_range, n_agent, uid_to_idx,
+    def __init__(self, serializer: EnvSerializer, action_space, observation_space, reward_range, n_agents, uid_to_idx,
                  port: int = 5555):
         super().__init__(serializer, action_space, observation_space, reward_range, port)
         context = zmq.Context()
         self.socket = context.socket(zmq.ROUTER)
         self.socket.bind(f"tcp://*:{self.port}")
-        assert isinstance(n_agent, int)
-        assert n_agent >= 2  # use normal JudgeEnv for single-agent task
-        self.n_agent = n_agent
+        assert isinstance(n_agents, int)
+        assert n_agents >= 2  # use normal JudgeEnv for single-agent task
+        self.n_agents = n_agents
         self.uid_to_idx = uid_to_idx
 
         self.can_reset = True  # at the beginning,
@@ -44,11 +44,11 @@ class JudgeMultiEnv(JudgeEnvBase, metaclass=abc.ABCMeta):
         # all agents can call reset once at the beginning of each episode
         # episode is started by the first "reset" received by any one of the agents
         init_obs_n = None
-        has_reset = [False for _ in range(self.n_agent)]
+        has_reset = [False for _ in range(self.n_agents)]
         reset_idx_to_rid = {}
         # step is started by the first "step" received by any one of the agents
-        action_n = [None for _ in range(self.n_agent)]
-        has_stepped = [False for _ in range(self.n_agent)]
+        action_n = [None for _ in range(self.n_agents)]
+        has_stepped = [False for _ in range(self.n_agents)]
         step_idx_to_rid = {}  # map from idx to route ID
 
         while True:
@@ -66,7 +66,7 @@ class JudgeMultiEnv(JudgeEnvBase, metaclass=abc.ABCMeta):
                     if not (False in has_stepped):  # when all agents have taken an action, step in the underlying env
                         self.state = _State.STEP
                         obs_n, reward_n, done_n, info = self.step(action_n)
-                        for i in range(self.n_agent):
+                        for i in range(self.n_agents):
                             resp = {
                                 "observation": self.serializer.observation_to_json(obs_n[i]),
                                 "reward": reward_n[i],
@@ -78,8 +78,8 @@ class JudgeMultiEnv(JudgeEnvBase, metaclass=abc.ABCMeta):
                             self.state = _State.INITIAL
                         else:
                             self.state = _State.WAIT_ACTION
-                        action_n = [None for _ in range(self.n_agent)]
-                        has_stepped = [False for _ in range(self.n_agent)]
+                        action_n = [None for _ in range(self.n_agents)]
+                        has_stepped = [False for _ in range(self.n_agents)]
                         step_idx_to_rid = {}  # map from idx to route ID
                 else:
                     raise Exception(f"Unexpected step state: {self.state}")
@@ -101,14 +101,14 @@ class JudgeMultiEnv(JudgeEnvBase, metaclass=abc.ABCMeta):
                             # when all agents have called "reset", the episode is started
                             self.state = _State.WAIT_ACTION
                             # send initial observation to each agent at the same time
-                            for i in range(self.n_agent):
+                            for i in range(self.n_agents):
                                 self.socket.send_multipart([reset_idx_to_rid[i], delim, json.dumps({
                                     "accepted": True,
                                     "observation": self.serializer.observation_to_json(init_obs_n[idx])
                                 }).encode("utf-8")])
                             # cleanup
                             init_obs_n = None
-                            has_reset = [False for _ in range(self.n_agent)]
+                            has_reset = [False for _ in range(self.n_agents)]
                             reset_idx_to_rid = {}
                 else:
                     has_reset[idx] = True

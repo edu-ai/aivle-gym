@@ -39,10 +39,8 @@ class AgentEnv(gym.Env):
         else:
             raise NotAllowedToReset
 
-    def render(self, mode='human'):
-        """render method does nothing in AgentEnv class
-        """
-        pass
+    def render(self, mode='human') -> Any:
+        return self._remote_render(mode)
 
     def close(self):
         pass  # TODO
@@ -58,7 +56,7 @@ class AgentEnv(gym.Env):
 
         Returns: (observation, reward, done, info)
         """
-        logging.debug(f"requesting to step with action {action}")
+        logging.debug(f"[AgentEnv | _remote_step] action: {action}")
         self.socket.send_string(json.dumps({
             "uid": self.uid,
             "method": "step",
@@ -66,7 +64,7 @@ class AgentEnv(gym.Env):
         }))
         msg = self.socket.recv_string()
         obs, reward, done, info = self._json_to_ordi(json.loads(msg))
-        logging.debug(f"obs: {obs}, reward: {reward}, done: {done}, info: {info}")
+        logging.debug(f"[AgentEnv | _remote_step] response obs: {obs}, reward: {reward}, done: {done}, info: {info}")
         return obs, reward, done, info
 
     def _remote_reset(self) -> Tuple[bool, Any]:
@@ -76,18 +74,28 @@ class AgentEnv(gym.Env):
             accepted (bool): whether the reset request is accepted by the remote\n
             observation (object): if accepted, initial observation will be returned
         """
-        logging.debug(f"requesting to reset")
+        logging.debug(f"[AgentEnv | _remote_reset] requesting")
         self.socket.send_string(json.dumps({
             "uid": self.uid,
             "method": "reset"
         }))
         msg = self.socket.recv_string()
         obj = json.loads(msg)
-        logging.debug(f"reset response: {obj}")
+        logging.debug(f"[AgentEnv | _remote_reset] response: {obj}")
         if obj["accepted"]:
             return True, self.serializer.json_to_observation(obj["observation"])
         else:
             return False, None
+
+    def _remote_render(self, mode) -> Any:
+        # logging.debug(f"[AgentEnv | _remote_render] requesting")
+        self.socket.send_string(json.dumps({
+            "uid": self.uid,
+            "method": "render",
+            "mode": mode
+        }))
+        msg = self.socket.recv_string()
+        return json.loads(msg)
 
     def _json_to_ordi(self, ordi_json) -> Tuple[Any, float, bool, dict]:
         obs = ordi_json['observation']

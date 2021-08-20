@@ -39,6 +39,11 @@ class JudgeEnv(JudgeEnvBase, metaclass=abc.ABCMeta):
                     "accepted": True,
                     "observation": self.serializer.observation_to_json(obs)
                 }))
+            elif req["method"] == "render":
+                resp = self.render(req["mode"])
+                self.socket.send_string(json.dumps({
+                    "resp": resp
+                }))
             else:
                 pass
             logging.debug(f"Received request from {req['uid']}: {json.loads(message)}")

@@ -1,9 +1,10 @@
 import logging
+import time
 
 import gym
 
 from aivle_gym.agent_env import AgentEnv
-from serializer import CartPoleEnvSerializer
+from judge import CartPoleEnvSerializer
 
 
 class CartPoleAgentEnv(AgentEnv):
@@ -15,15 +16,17 @@ class CartPoleAgentEnv(AgentEnv):
 
 def main():
     env = CartPoleAgentEnv()
-    for i_episode in range(1):
+    for i_episode in range(10):
         env.reset()
         for t in range(100):
             env.render()
+            time.sleep(0.1)
             action = env.action_space.sample()
             observation, reward, done, info = env.step(action)
             if done:
                 logging.info("Episode finished after {} timesteps".format(t + 1))
                 break
+        time.sleep(2)
     env.close()
 
 

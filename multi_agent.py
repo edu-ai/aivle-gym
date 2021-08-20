@@ -24,7 +24,7 @@ def main():
         for t in range(1000):
             action = env.action_space.sample()
             obs, reward, done, info = env.step(action)
-            time.sleep(0.1)
+            time.sleep(0.05)
             logging.debug(f"{action}-{obs}-{reward}-{done}-{info}")
             if done:
                 break
