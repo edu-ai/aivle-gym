@@ -42,11 +42,11 @@ class AgentEnv(gym.Env):
     def render(self, mode='human') -> Any:
         return self._remote_render(mode)
 
-    def close(self):
-        pass  # TODO
+    def close(self) -> None:
+        self._remote_close()
 
-    def seed(self, seed=None):
-        pass  # TODO
+    def seed(self, seed=None) -> None:
+        self._remote_seed(seed)
 
     def _remote_step(self, action) -> Tuple[Any, float, bool, dict]:
         """Request remote to take an action
@@ -96,6 +96,21 @@ class AgentEnv(gym.Env):
         }))
         msg = self.socket.recv_string()
         return json.loads(msg)
+
+    def _remote_close(self) -> None:
+        self.socket.send_string(json.dumps({
+            "uid": self.uid,
+            "method": "close"
+        }))
+        _ = self.socket.recv_string()
+
+    def _remote_seed(self, seed) -> None:
+        self.socket.send_string(json.dumps({
+            "uid": self.uid,
+            "method": "seed",
+            "seed": seed
+        }))
+        _ = self.socket.recv_string()
 
     def _json_to_ordi(self, ordi_json) -> Tuple[Any, float, bool, dict]:
         obs = ordi_json['observation']

@@ -21,6 +21,12 @@ class PongJudgeEnv(JudgeMultiEnv):
     def render(self, mode='human'):
         return self.env.render(mode=mode)
 
+    def close(self):
+        pass  # TODO
+
+    def seed(self, seed=None):
+        pass  # TODO
+
 
 class PongEnvSerializer(EnvSerializer):
     def action_to_json(self, action):

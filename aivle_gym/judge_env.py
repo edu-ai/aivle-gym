@@ -23,7 +23,8 @@ class JudgeEnv(JudgeEnvBase, metaclass=abc.ABCMeta):
         while True:
             message = self.socket.recv_string()
             req = json.loads(message)
-            if req["method"] == "step":
+            method = req["method"]
+            if method == "step":
                 action = self.serializer.json_to_action(req["action"])
                 obs, reward, done, info = self.step(action)
                 resp = {
@@ -33,17 +34,24 @@ class JudgeEnv(JudgeEnvBase, metaclass=abc.ABCMeta):
                     "info": self.serializer.info_to_json(info)
                 }
                 self.socket.send_string(json.dumps(resp))
-            elif req["method"] == "reset":
+            elif method == "reset":
                 obs = self.reset()
                 self.socket.send_string(json.dumps({
                     "accepted": True,
                     "observation": self.serializer.observation_to_json(obs)
                 }))
-            elif req["method"] == "render":
+            elif method == "render":
                 resp = self.render(req["mode"])
                 self.socket.send_string(json.dumps({
                     "resp": resp
                 }))
+            elif method == "seed":
+                self.seed(req["seed"])
+                self.socket.send_string("ACK")
+            elif method == "close":
+                self.close()
+                self.socket.send_string("ACK")
             else:
+                logging.warning(f"[JudgeEnv] unsupported method {method} from [uid: {req['uid']}]")
                 pass
-            logging.debug(f"Received request from {req['uid']}: {json.loads(message)}")
+            logging.debug(f"[JudgeEnv] request from {req['uid']}: {json.loads(message)}")

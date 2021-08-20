@@ -20,6 +20,12 @@ class CartPoleJudgeEnv(JudgeEnv):
     def render(self, mode='human'):
         return self.env.render(mode=mode)
 
+    def close(self):
+        self.env.close()
+
+    def seed(self, seed=None):
+        self.env.seed(seed)
+
 
 class CartPoleEnvSerializer(EnvSerializer):
     def action_to_json(self, action):

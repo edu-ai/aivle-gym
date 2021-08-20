@@ -114,6 +114,12 @@ class JudgeMultiEnv(JudgeEnvBase, metaclass=abc.ABCMeta):
                     has_reset[idx] = True
                     reset_idx_to_rid[idx] = rid
                     pass
+            elif method == "render":
+                pass  # TODO
+            elif method == "seed":
+                pass  # TODO
+            elif method == "close":
+                pass  # TODO
             else:
                 pass
             logging.debug(f"Received request from {req['uid']}: {json.loads(message)}")

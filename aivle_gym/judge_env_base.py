@@ -35,8 +35,10 @@ class JudgeEnvBase(gym.Env):
     def render(self, mode='human'):
         pass
 
-    def close(self):  # TODO
+    @abc.abstractmethod
+    def close(self):
         pass
 
-    def seed(self, seed=None):  # TODO
+    @abc.abstractmethod
+    def seed(self, seed=None):
         pass
