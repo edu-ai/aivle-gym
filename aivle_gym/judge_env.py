@@ -15,11 +15,13 @@ class JudgeEnv(JudgeEnvBase, metaclass=abc.ABCMeta):
 
     def __init__(self, serializer: EnvSerializer, action_space, observation_space, reward_range, port: int = 5555):
         super().__init__(serializer, action_space, observation_space, reward_range, port)
+        self.socket = None
+
+    def start(self):
         context = zmq.Context()
         self.socket = context.socket(zmq.REP)
         self.socket.bind(f"tcp://*:{self.port}")
-
-    def start(self):
+        logging.info(f"[JudgeEnv] starting at {self.port}")
         while True:
             message = self.socket.recv_string()
             req = json.loads(message)
@@ -51,6 +53,7 @@ class JudgeEnv(JudgeEnvBase, metaclass=abc.ABCMeta):
             elif method == "close":
                 self.close()
                 self.socket.send_string("ACK")
+                break  # TODO: validation of close request to avoid malicious close()
             else:
                 logging.warning(f"[JudgeEnv] unsupported method {method} from [uid: {req['uid']}]")
                 pass

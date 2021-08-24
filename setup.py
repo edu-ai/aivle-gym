@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="aivle_gym",
-    version="0.1",
+    version="0.1.1",
     description="Super-class of OpenAI Gym environment for aiVLE.",
     url="https://github.com/edu-ai/aivle-gym",
     author="Yuanhong Tan",
