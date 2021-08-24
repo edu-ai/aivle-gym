@@ -61,7 +61,7 @@ class CartPoleAgentEnv(AgentEnv):
     def __init__(self):
         base_env = gym.make('CartPole-v0')
         super().__init__(CartPoleEnvSerializer(), base_env.action_space, base_env.observation_space,
-                         base_env.reward_range, uid=0)
+                         base_env.reward_range, uid=0)  # uid can be any int for single-agent agent env
 ```
 
 **Judge Environment**
@@ -113,3 +113,15 @@ env.close()
 These code can be found under `./example`. To execute this concrete example:
 1. `python judge.py` to start the simulation process first
 2. `python agent.py` to run the agent code
+
+### Multi-agent task
+
+Multi-agent case is very similar to single-agent case, differences are:
+- agent env:
+  - `action_space`, `observation_space` and `reward_range` need to be that of this specific agent
+  - `uid` needs to be meaningful (i.e. unique among all participating agents, etc.)
+- judge env: additional constructor params:
+  - `n_agents`: number of agents
+  - `uid_to_idx`: map from uid to agent index (0-indexed)
+
+A concrete example can be found under `./example/multi_agent.py` and `./example/multi_judge.py`
