@@ -10,11 +10,20 @@ from aivle_gym.judge_env_base import JudgeEnvBase
 
 class JudgeEnv(JudgeEnvBase, metaclass=abc.ABCMeta):
     # Set this in SOME subclasses
-    metadata = {'render.modes': []}
+    metadata = {"render.modes": []}
     spec = None
 
-    def __init__(self, serializer: EnvSerializer, action_space, observation_space, reward_range, port: int = 5555):
-        super().__init__(serializer, action_space, observation_space, reward_range, port)
+    def __init__(
+        self,
+        serializer: EnvSerializer,
+        action_space,
+        observation_space,
+        reward_range,
+        port: int = 5555,
+    ):
+        super().__init__(
+            serializer, action_space, observation_space, reward_range, port
+        )
         self.socket = None
 
     def start(self):
@@ -33,20 +42,22 @@ class JudgeEnv(JudgeEnvBase, metaclass=abc.ABCMeta):
                     "observation": self.serializer.observation_to_json(obs),
                     "reward": reward,
                     "done": done,
-                    "info": self.serializer.info_to_json(info)
+                    "info": self.serializer.info_to_json(info),
                 }
                 self.socket.send_string(json.dumps(resp))
             elif method == "reset":
                 obs = self.reset()
-                self.socket.send_string(json.dumps({
-                    "accepted": True,
-                    "observation": self.serializer.observation_to_json(obs)
-                }))
+                self.socket.send_string(
+                    json.dumps(
+                        {
+                            "accepted": True,
+                            "observation": self.serializer.observation_to_json(obs),
+                        }
+                    )
+                )
             elif method == "render":
                 resp = self.render(req["mode"])
-                self.socket.send_string(json.dumps({
-                    "resp": resp
-                }))
+                self.socket.send_string(json.dumps({"resp": resp}))
             elif method == "seed":
                 self.seed(req["seed"])
                 self.socket.send_string("ACK")
@@ -55,6 +66,10 @@ class JudgeEnv(JudgeEnvBase, metaclass=abc.ABCMeta):
                 self.socket.send_string("ACK")
                 break  # TODO: validation of close request to avoid malicious close()
             else:
-                logging.warning(f"[JudgeEnv] unsupported method {method} from [uid: {req['uid']}]")
+                logging.warning(
+                    f"[JudgeEnv] unsupported method {method} from [uid: {req['uid']}]"
+                )
                 pass
-            logging.debug(f"[JudgeEnv] request from {req['uid']}: {json.loads(message)}")
+            logging.debug(
+                f"[JudgeEnv] request from {req['uid']}: {json.loads(message)}"
+            )

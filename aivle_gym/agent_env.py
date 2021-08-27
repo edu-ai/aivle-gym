@@ -14,20 +14,34 @@ class NotAllowedToReset(Exception):
 
 class AgentEnv(gym.Env):
     # Set this in SOME subclasses
-    metadata = {'render.modes': []}
+    metadata = {"render.modes": []}
     spec = None
 
-    def __init__(self, serializer: EnvSerializer, action_space, observation_space, reward_range, uid, port=5555):
+    def __init__(
+        self,
+        serializer: EnvSerializer,
+        action_space,
+        observation_space,
+        reward_range,
+        uid,
+        port=5555,
+    ):
         self.uid = uid
         self.action_space = action_space
         self.observation_space = observation_space
         self.reward_range = reward_range
         self.serializer = serializer
+        self.port = port
         assert isinstance(port, int)
         assert isinstance(uid, int)
         context = zmq.Context()
         self.socket = context.socket(zmq.REQ)
-        self.socket.connect(f"tcp://localhost:{port}")
+        self.socket.connect(f"tcp://localhost:{self.port}")
+
+    # def reset_socket(self):
+    #     context = zmq.Context()
+    #     self.socket = context.socket(zmq.REQ)
+    #     self.socket.connect(f"tcp://localhost:{self.port}")
 
     def step(self, action):
         return self._remote_step(action)
@@ -39,7 +53,7 @@ class AgentEnv(gym.Env):
         else:
             raise NotAllowedToReset
 
-    def render(self, mode='human') -> Any:
+    def render(self, mode="human") -> Any:
         return self._remote_render(mode)
 
     def close(self) -> None:
@@ -56,15 +70,21 @@ class AgentEnv(gym.Env):
 
         Returns: (observation, reward, done, info)
         """
-        logging.debug(f"[AgentEnv | _remote_step] action: {action}")
-        self.socket.send_string(json.dumps({
-            "uid": self.uid,
-            "method": "step",
-            "action": self.serializer.action_to_json(action)
-        }))
+        logging.debug(f"[AgentEnv {self.uid}| _remote_step] action: {action}")
+        self.socket.send_string(
+            json.dumps(
+                {
+                    "uid": self.uid,
+                    "method": "step",
+                    "action": self.serializer.action_to_json(action),
+                }
+            )
+        )
         msg = self.socket.recv_string()
         obs, reward, done, info = self._json_to_ordi(json.loads(msg))
-        logging.debug(f"[AgentEnv | _remote_step] response obs: {obs}, reward: {reward}, done: {done}, info: {info}")
+        logging.debug(
+            f"[AgentEnv {self.uid}| _remote_step] response obs: {obs}, reward: {reward}, done: {done}, info: {info}"
+        )
         return obs, reward, done, info
 
     def _remote_reset(self) -> Tuple[bool, Any]:
@@ -74,14 +94,11 @@ class AgentEnv(gym.Env):
             accepted (bool): whether the reset request is accepted by the remote\n
             observation (object): if accepted, initial observation will be returned
         """
-        logging.debug(f"[AgentEnv | _remote_reset] requesting")
-        self.socket.send_string(json.dumps({
-            "uid": self.uid,
-            "method": "reset"
-        }))
+        logging.debug(f"[AgentEnv {self.uid}| _remote_reset] requesting")
+        self.socket.send_string(json.dumps({"uid": self.uid, "method": "reset"}))
         msg = self.socket.recv_string()
         obj = json.loads(msg)
-        logging.debug(f"[AgentEnv | _remote_reset] response: {obj}")
+        logging.debug(f"[AgentEnv {self.uid}| _remote_reset] response: {obj}")
         if obj["accepted"]:
             return True, self.serializer.json_to_observation(obj["observation"])
         else:
@@ -89,32 +106,32 @@ class AgentEnv(gym.Env):
 
     def _remote_render(self, mode) -> Any:
         # logging.debug(f"[AgentEnv | _remote_render] requesting")
-        self.socket.send_string(json.dumps({
-            "uid": self.uid,
-            "method": "render",
-            "mode": mode
-        }))
+        self.socket.send_string(
+            json.dumps({"uid": self.uid, "method": "render", "mode": mode})
+        )
         msg = self.socket.recv_string()
         return json.loads(msg)
 
     def _remote_close(self) -> None:
-        self.socket.send_string(json.dumps({
-            "uid": self.uid,
-            "method": "close"
-        }))
+        logging.debug(f"[AgentEnv {self.uid}| _remote_close] requesting")
+        self.socket.send_string(json.dumps({"uid": self.uid, "method": "close"}))
         _ = self.socket.recv_string()
 
     def _remote_seed(self, seed) -> None:
-        self.socket.send_string(json.dumps({
-            "uid": self.uid,
-            "method": "seed",
-            "seed": seed
-        }))
+        logging.debug(f"[AgentEnv {self.uid}| _remote_seed] seed: {seed}")
+        self.socket.send_string(
+            json.dumps({"uid": self.uid, "method": "seed", "seed": seed})
+        )
         _ = self.socket.recv_string()
 
     def _json_to_ordi(self, ordi_json) -> Tuple[Any, float, bool, dict]:
-        obs = ordi_json['observation']
-        reward = ordi_json['reward']
-        done = ordi_json['done']
-        info = ordi_json['info']
-        return self.serializer.json_to_observation(obs), reward, done, self.serializer.json_to_info(info)
+        obs = ordi_json["observation"]
+        reward = ordi_json["reward"]
+        done = ordi_json["done"]
+        info = ordi_json["info"]
+        return (
+            self.serializer.json_to_observation(obs),
+            reward,
+            done,
+            self.serializer.json_to_info(info),
+        )

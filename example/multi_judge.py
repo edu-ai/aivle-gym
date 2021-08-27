@@ -8,8 +8,14 @@ from aivle_gym.judge_multi_env import JudgeMultiEnv
 class PongJudgeEnv(JudgeMultiEnv):
     def __init__(self):
         self.env = gym.make("PongDuel-v0")
-        super().__init__(PongEnvSerializer(), self.env.action_space, self.env.observation_space, self.env.reward_range,
-                         self.env.n_agents, {0: 0, 1: 1})
+        super().__init__(
+            PongEnvSerializer(),
+            self.env.action_space,
+            self.env.observation_space,
+            self.env.reward_range,
+            self.env.n_agents,
+            {0: 0, 1: 1},
+        )
 
     def step(self, action):
         self.env.render()
@@ -18,7 +24,7 @@ class PongJudgeEnv(JudgeMultiEnv):
     def reset(self):
         return self.env.reset()
 
-    def render(self, mode='human'):
+    def render(self, mode="human"):
         return self.env.render(mode=mode)
 
     def close(self):

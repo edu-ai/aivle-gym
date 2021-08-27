@@ -9,9 +9,14 @@ from judge import CartPoleEnvSerializer
 
 class CartPoleAgentEnv(AgentEnv):
     def __init__(self):
-        base_env = gym.make('CartPole-v0')
-        super().__init__(CartPoleEnvSerializer(), base_env.action_space, base_env.observation_space,
-                         base_env.reward_range, uid=0)  # uid can be any int for single-agent agent env
+        base_env = gym.make("CartPole-v0")
+        super().__init__(
+            CartPoleEnvSerializer(),
+            base_env.action_space,
+            base_env.observation_space,
+            base_env.reward_range,
+            uid=0,
+        )  # uid can be any int for single-agent agent env
 
 
 def main():

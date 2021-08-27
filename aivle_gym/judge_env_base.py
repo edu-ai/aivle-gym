@@ -7,10 +7,17 @@ from aivle_gym.env_serializer import EnvSerializer
 
 class JudgeEnvBase(gym.Env):
     # Set this in SOME subclasses
-    metadata = {'render.modes': []}
+    metadata = {"render.modes": []}
     spec = None
 
-    def __init__(self, serializer: EnvSerializer, action_space, observation_space, reward_range, port):
+    def __init__(
+        self,
+        serializer: EnvSerializer,
+        action_space,
+        observation_space,
+        reward_range,
+        port,
+    ):
         assert isinstance(port, int)
         assert isinstance(serializer, EnvSerializer)
         self.port = port
@@ -32,7 +39,7 @@ class JudgeEnvBase(gym.Env):
         pass
 
     @abc.abstractmethod
-    def render(self, mode='human'):
+    def render(self, mode="human"):
         pass
 
     @abc.abstractmethod

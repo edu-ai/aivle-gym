@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.1.2] - 2021-08-27
+
+### Added
+- Examples of using multiprocessing to run multi-agent judge env and several agents within
+one program.
+- Ignoring render/seed/close requests in JudgeMultiEnv (as for how to handle these
+methods properly, please refer to how `close` is handled in `./example/multiproc_multi.py`).
+- Code formatted by black formatter.
+
 ## [0.1.1] - 2021-08-24
 
 ### Added

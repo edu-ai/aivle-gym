@@ -12,19 +12,23 @@ from multi_judge import PongEnvSerializer
 class PongAgentEnv(AgentEnv):
     def __init__(self, uid):
         base_env = gym.make("PongDuel-v0")
-        super().__init__(PongEnvSerializer(), base_env.action_space[0], base_env.observation_space[0],
-                         base_env.reward_range, uid=uid)
+        super().__init__(
+            PongEnvSerializer(),
+            base_env.action_space[0],
+            base_env.observation_space[0],
+            base_env.reward_range,
+            uid=uid,
+        )
 
 
 def main():
-    # print(sys.argv[0])
     env = PongAgentEnv(uid=int(sys.argv[1]))
-    for _ in range(5):
+    for _ in range(2):
         env.reset()
-        for t in range(1000):
+        for t in range(10000):
             action = env.action_space.sample()
             obs, reward, done, info = env.step(action)
-            time.sleep(0.05)
+            time.sleep(0.02)
             logging.debug(f"{action}-{obs}-{reward}-{done}-{info}")
             if done:
                 break
