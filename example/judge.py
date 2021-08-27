@@ -1,3 +1,5 @@
+import logging
+
 import gym
 import numpy
 
@@ -57,4 +59,5 @@ def main():
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)
     main()
