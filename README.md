@@ -11,8 +11,6 @@ agent processes, which natively supports multi-agent tasks.
 
 ## Getting Started
 
-[Design details](https://pvzuww1vqx.larksuite.com/docs/docusSYdnLXZBojin39b8DGzKMT)
-
 We will call the original Gym environment the *base environment* in this tutorial.
 
 There are three components in an aiVLE Gym environment:

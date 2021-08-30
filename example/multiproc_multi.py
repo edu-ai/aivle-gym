@@ -11,7 +11,7 @@ def run_agent(uid):
     for i_episode in range(2):
         env.reset()
         for t in range(10000):
-            # time.sleep(0.02)
+            time.sleep(0.02)
             action = env.action_space.sample()
             observation, reward, done, info = env.step(action)
             if done:
