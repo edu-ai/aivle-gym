@@ -8,7 +8,7 @@ setup(
     author="Yuanhong Tan",
     author_email="tan.yuanhong@u.nus.edu",
     packages=["aivle_gym"],
-    install_requires=["zmq", "gym"],
+    install_requires=["pyzmq", "gym"],
     setup_requires=['wheel'],
     zip_safe=False,
 )
