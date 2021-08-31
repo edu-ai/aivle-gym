@@ -9,5 +9,6 @@ setup(
     author_email="tan.yuanhong@u.nus.edu",
     packages=["aivle_gym"],
     install_requires=["zmq", "gym"],
+    setup_requires=['wheel'],
     zip_safe=False,
 )
