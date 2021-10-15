@@ -8,7 +8,7 @@ from judge import CartPoleEnvSerializer
 
 
 class CartPoleAgentEnv(AgentEnv):
-    def __init__(self):
+    def __init__(self, port):
         base_env = gym.make("CartPole-v0")
         super().__init__(
             CartPoleEnvSerializer(),
@@ -16,11 +16,12 @@ class CartPoleAgentEnv(AgentEnv):
             base_env.observation_space,
             base_env.reward_range,
             uid=0,
+            port=port
         )  # uid can be any int for single-agent agent env
 
 
 def main():
-    env = CartPoleAgentEnv()
+    env = CartPoleAgentEnv(port=5555)
     for i_episode in range(10):
         env.reset()
         for t in range(100):

@@ -6,8 +6,8 @@ from enum import Enum
 import zmq
 
 from aivle_gym.env_serializer import EnvSerializer
-from aivle_gym.judge_env_base import JudgeEnvBase
 from aivle_gym.exceptions import *
+from aivle_gym.judge_env_base import JudgeEnvBase
 
 
 class _State(Enum):
@@ -29,14 +29,14 @@ class JudgeMultiEnv(JudgeEnvBase, metaclass=abc.ABCMeta):
     spec = None
 
     def __init__(
-        self,
-        serializer: EnvSerializer,
-        action_space,
-        observation_space,
-        reward_range,
-        n_agents,
-        uid_to_idx,
-        port: int = 5555,
+            self,
+            serializer: EnvSerializer,
+            action_space,
+            observation_space,
+            reward_range,
+            n_agents,
+            uid_to_idx,
+            port=None,
     ):
         super().__init__(
             serializer, action_space, observation_space, reward_range, port
@@ -50,10 +50,16 @@ class JudgeMultiEnv(JudgeEnvBase, metaclass=abc.ABCMeta):
         self.can_reset = True
         self.state = _State.INITIAL
 
-    def start(self):
+    def bind(self):
         context = zmq.Context()
         self.socket = context.socket(zmq.ROUTER)
-        self.socket.bind(f"tcp://*:{self.port}")
+        if self.port is not None and self.port != 0:
+            self.socket.bind(f"tcp://*:{self.port}")
+        else:
+            self.port = self.socket.bind_to_random_port("tcp://*")
+        return self.port
+
+    def start(self):
         logging.info(f"[JudgeEnv] starting at {self.port}")
         # episode can be started only after all agents have called "reset"
         # all agents can call reset once at the beginning of each episode
@@ -82,7 +88,7 @@ class JudgeMultiEnv(JudgeEnvBase, metaclass=abc.ABCMeta):
                     step_idx_to_rid[idx] = rid
                     action_n[idx] = self.serializer.json_to_action(req["action"])
                     if not (
-                        False in has_stepped
+                            False in has_stepped
                     ):  # when all agents have taken an action, step in the underlying env
                         self.state = _State.STEP
                         obs_n, reward_n, done_n, info = self.step(action_n)

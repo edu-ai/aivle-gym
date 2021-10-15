@@ -8,13 +8,14 @@ from aivle_gym.judge_env import JudgeEnv
 
 
 class CartPoleJudgeEnv(JudgeEnv):
-    def __init__(self):
+    def __init__(self, port=None):
         self.env = gym.make("CartPole-v0")
         super().__init__(
             CartPoleEnvSerializer(),
             self.env.action_space,
             self.env.observation_space,
             self.env.reward_range,
+            port=port
         )
 
     def step(self, action):
@@ -54,7 +55,8 @@ class CartPoleEnvSerializer(EnvSerializer):
 
 
 def main():
-    env = CartPoleJudgeEnv()
+    env = CartPoleJudgeEnv(port=5555)
+    env.bind()
     env.start()
 
 

@@ -24,7 +24,7 @@ class AgentEnv(gym.Env):
         observation_space,
         reward_range,
         uid,
-        port=5555,
+        port,
     ):
         self.uid = uid
         self.action_space = action_space

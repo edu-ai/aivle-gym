@@ -10,7 +10,7 @@ from multi_judge import PongEnvSerializer
 
 
 class PongAgentEnv(AgentEnv):
-    def __init__(self, uid):
+    def __init__(self, uid, port):
         base_env = gym.make("PongDuel-v0")
         super().__init__(
             PongEnvSerializer(),
@@ -18,11 +18,12 @@ class PongAgentEnv(AgentEnv):
             base_env.observation_space[0],
             base_env.reward_range,
             uid=uid,
+            port=port,
         )
 
 
 def main():
-    env = PongAgentEnv(uid=int(sys.argv[1]))
+    env = PongAgentEnv(uid=int(sys.argv[1]), port=5555)
     for _ in range(2):
         env.reset()
         for t in range(10000):

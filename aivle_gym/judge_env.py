@@ -14,22 +14,28 @@ class JudgeEnv(JudgeEnvBase, metaclass=abc.ABCMeta):
     spec = None
 
     def __init__(
-        self,
-        serializer: EnvSerializer,
-        action_space,
-        observation_space,
-        reward_range,
-        port: int = 5555,
+            self,
+            serializer: EnvSerializer,
+            action_space,
+            observation_space,
+            reward_range,
+            port=None,
     ):
         super().__init__(
             serializer, action_space, observation_space, reward_range, port
         )
         self.socket = None
 
-    def start(self):
+    def bind(self):
         context = zmq.Context()
         self.socket = context.socket(zmq.REP)
-        self.socket.bind(f"tcp://*:{self.port}")
+        if self.port is not None and self.port != 0:
+            self.socket.bind(f"tcp://*:{self.port}")
+        else:
+            self.port = self.socket.bind_to_random_port("tcp://*")
+        return self.port
+
+    def start(self):
         logging.info(f"[JudgeEnv] starting at {self.port}")
         while True:
             message = self.socket.recv_string()

@@ -8,7 +8,7 @@ from aivle_gym.judge_multi_env import JudgeMultiEnv
 
 
 class PongJudgeEnv(JudgeMultiEnv):
-    def __init__(self):
+    def __init__(self, port=None):
         self.env = gym.make("PongDuel-v0")
         super().__init__(
             PongEnvSerializer(),
@@ -17,6 +17,7 @@ class PongJudgeEnv(JudgeMultiEnv):
             self.env.reward_range,
             self.env.n_agents,
             {0: 0, 1: 1},
+            port=port,
         )
 
     def step(self, action):
@@ -57,7 +58,8 @@ class PongEnvSerializer(EnvSerializer):
 
 
 def main():
-    env = PongJudgeEnv()
+    env = PongJudgeEnv(port=5555)
+    env.bind()
     env.start()
 
 

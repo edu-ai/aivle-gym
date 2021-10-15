@@ -11,20 +11,24 @@ class JudgeEnvBase(gym.Env):
     spec = None
 
     def __init__(
-        self,
-        serializer: EnvSerializer,
-        action_space,
-        observation_space,
-        reward_range,
-        port,
+            self,
+            serializer: EnvSerializer,
+            action_space,
+            observation_space,
+            reward_range,
+            port,
     ):
-        assert isinstance(port, int)
+        assert port is None or isinstance(port, int)
         assert isinstance(serializer, EnvSerializer)
         self.port = port
         self.serializer = serializer
         self.action_space = action_space
         self.observation_space = observation_space
         self.reward_range = reward_range
+
+    @abc.abstractmethod
+    def bind(self):
+        pass
 
     @abc.abstractmethod
     def start(self):

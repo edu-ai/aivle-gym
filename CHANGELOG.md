@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+# [0.2.0] - 2021-10-15
+
+### Changed
+- (Breaking) socket binding for `JudgeEnv` and `JudgeMultiEnv` are separated from `start`
+method into `bind` method. (Now before calling `start` you need to call `bind` first.)
+- (Breaking) `port` is no longer optional for `AgentEnv`
+- (Breaking) `port` now defaults to `None` (i.e. use a random available port) for 
+`JudgeEnv` and `JudgeMultiEnv`
+- Updated examples to reflect these breaking changes - especially for "multiproc" examples.
+
+### Added
+- When initializing `JudgeEnv` or `JudgeMultiEnv`, if `port` is not provided, or `None`,
+or 0, a random available port will be used in `bind` method. `bind` method will always
+return the port number used by this judge instance.
+
 ## [0.1.3] - 2021-08-27
 
 ### Fixed
