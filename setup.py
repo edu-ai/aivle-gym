@@ -9,6 +9,7 @@ setup(
     author_email="tan.yuanhong@u.nus.edu",
     packages=["aivle_gym"],
     install_requires=["pyzmq", "gym"],
+    python_requires=">=3.4",
     setup_requires=['wheel'],
     zip_safe=False,
 )
