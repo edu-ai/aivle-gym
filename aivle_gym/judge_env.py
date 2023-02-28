@@ -18,12 +18,10 @@ class JudgeEnv(JudgeEnvBase, metaclass=abc.ABCMeta):
             serializer: EnvSerializer,
             action_space,
             observation_space,
-            reward_range,
-            port=None,
+            reward_range, port = None
     ):
         super().__init__(
-            serializer, action_space, observation_space, reward_range, port
-        )
+            serializer, action_space, observation_space, reward_range, port)
         self.socket = None
 
     def bind(self):
@@ -37,13 +35,15 @@ class JudgeEnv(JudgeEnvBase, metaclass=abc.ABCMeta):
 
     def start(self):
         logging.info(f"[JudgeEnv] starting at {self.port}")
+        obs, info = self.reset()
         while True:
             message = self.socket.recv_string()
             req = json.loads(message)
             method = req["method"]
+
             if method == "step":
-                action = self.serializer.json_to_action(req["action"])
-                obs, reward, done, info = self.step(action)
+                action = self.serializer.json_to_action(int(req["action"]))
+                obs, reward, done, truncated, info = self.step(action)
                 resp = {
                     "observation": self.serializer.observation_to_json(obs),
                     "reward": reward,
@@ -52,7 +52,7 @@ class JudgeEnv(JudgeEnvBase, metaclass=abc.ABCMeta):
                 }
                 self.socket.send_string(json.dumps(resp))
             elif method == "reset":
-                obs = self.reset()
+                obs, info = self.reset()
                 self.socket.send_string(
                     json.dumps(
                         {
@@ -62,13 +62,15 @@ class JudgeEnv(JudgeEnvBase, metaclass=abc.ABCMeta):
                     )
                 )
             elif method == "render":
-                resp = self.render(req["mode"])
-                self.socket.send_string(json.dumps({"resp": resp}))
+                print(req["mode"])
+                #resp = self.render(req["mode"])
+                resp = self.render()
+                self.socket.send_string(json.dumps({"resp": self.serializer.observation_to_json(resp)}))
             elif method == "seed":
                 self.seed(req["seed"])
                 self.socket.send_string("ACK")
             elif method == "close":
-                self.close()
+                super().close()
                 self.socket.send_string("ACK")
                 break  # TODO: validation of close request to avoid malicious close()
             else:

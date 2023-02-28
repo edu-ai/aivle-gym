@@ -18,13 +18,14 @@ class AgentEnv(gym.Env):
     spec = None
 
     def __init__(
-        self,
-        serializer: EnvSerializer,
-        action_space,
-        observation_space,
-        reward_range,
-        uid,
-        port,
+            self,
+            serializer: EnvSerializer,
+            action_space,
+            observation_space,
+            reward_range,
+            uid,
+            port,
+            env: gym.Env,
     ):
         self.uid = uid
         self.action_space = action_space
@@ -37,6 +38,13 @@ class AgentEnv(gym.Env):
         context = zmq.Context()
         self.socket = context.socket(zmq.REQ)
         self.socket.connect(f"tcp://localhost:{self.port}")
+
+        # For rendering
+        self.image = None
+        self.window = None
+        self.to_render = False
+        self.image_size = None
+        self.env = env
 
     # def reset_socket(self):
     #     context = zmq.Context()
@@ -54,7 +62,7 @@ class AgentEnv(gym.Env):
             raise NotAllowedToReset
 
     def render(self, mode="human") -> Any:
-        return self._remote_render(mode)
+        self._remote_render(mode)
 
     def close(self) -> None:
         self._remote_close()

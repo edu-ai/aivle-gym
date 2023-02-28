@@ -1,11 +1,8 @@
 import abc
-
-import gym
-
 from aivle_gym.env_serializer import EnvSerializer
 
 
-class JudgeEnvBase(gym.Env):
+class JudgeEnvBase():
     # Set this in SOME subclasses
     metadata = {"render.modes": []}
     spec = None
@@ -16,7 +13,7 @@ class JudgeEnvBase(gym.Env):
             action_space,
             observation_space,
             reward_range,
-            port,
+            port
     ):
         assert port is None or isinstance(port, int)
         assert isinstance(serializer, EnvSerializer)
@@ -25,6 +22,7 @@ class JudgeEnvBase(gym.Env):
         self.action_space = action_space
         self.observation_space = observation_space
         self.reward_range = reward_range
+        #super().__init__(domain, instance, enforce_action_constraints, debug)
 
     @abc.abstractmethod
     def bind(self):
@@ -34,19 +32,16 @@ class JudgeEnvBase(gym.Env):
     def start(self):
         pass
 
-    @abc.abstractmethod
     def step(self, action):
         pass
 
-    @abc.abstractmethod
     def reset(self):
         pass
 
-    @abc.abstractmethod
-    def render(self, mode="human"):
+    def render(self):
         pass
+        #return super().render(to_display=False)
 
-    @abc.abstractmethod
     def close(self):
         pass
 

@@ -9,7 +9,7 @@ from aivle_gym.judge_env import JudgeEnv
 
 class CartPoleJudgeEnv(JudgeEnv):
     def __init__(self, port=None):
-        self.env = gym.make("CartPole-v0")
+        self.env = gym.make("CartPole-v1")
         super().__init__(
             CartPoleEnvSerializer(),
             self.env.action_space,
