@@ -76,6 +76,8 @@ class NpEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, np.int64):
             return int(obj)
+        if isinstance(obj, np.int32):
+            return int(obj)
         if isinstance(obj, np.floating):
             return float(obj)
         if isinstance(obj, np.ndarray):
