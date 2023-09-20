@@ -56,6 +56,8 @@ class AgentEnv(gym.Env):
 
     def reset(self):
         ok, obs = self._remote_reset()
+        print("HERREEEEEEEEEEEEEEE")
+        print(obs)
         if ok:
             return obs
         else:
@@ -106,7 +108,6 @@ class AgentEnv(gym.Env):
         self.socket.send_string(json.dumps({"uid": self.uid, "method": "reset"}))
         msg = self.socket.recv_string()
         obj = json.loads(msg)
-        print("OBJ\n\n", obj)
         logging.debug(f"[AgentEnv {self.uid}| _remote_reset] response: {obj}")
         if obj["accepted"]:
             return True, self.serializer.json_to_observation(obj["observation"])
