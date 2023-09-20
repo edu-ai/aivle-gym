@@ -36,7 +36,7 @@ class JudgeEnv(JudgeEnvBase, metaclass=abc.ABCMeta):
     def start(self):
         logging.info(f"[JudgeEnv] starting at {self.port}")
         obs = self.reset()
-        print(obs)
+        # print(obs)
         while True:
             message = self.socket.recv_string()
             req = json.loads(message)
@@ -53,7 +53,7 @@ class JudgeEnv(JudgeEnvBase, metaclass=abc.ABCMeta):
                 }
                 self.socket.send_string(json.dumps(resp))
             elif method == "reset":
-                obs, info = self.reset()
+                obs = self.reset()
                 self.socket.send_string(
                     json.dumps(
                         {
