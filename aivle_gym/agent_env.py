@@ -56,8 +56,6 @@ class AgentEnv(gym.Env):
 
     def reset(self):
         ok, obs = self._remote_reset()
-        print("HERREEEEEEEEEEEEEEE")
-        print(obs)
         if ok:
             return obs
         else:
