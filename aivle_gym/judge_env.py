@@ -44,7 +44,7 @@ class JudgeEnv(JudgeEnvBase, metaclass=abc.ABCMeta):
 
             if method == "step":
                 action = self.serializer.json_to_action(int(req["action"]))
-                obs, reward, done, truncated, info = self.step(action)
+                obs, reward, done, info = self.step(action)
                 resp = {
                     "observation": self.serializer.observation_to_json(obs),
                     "reward": reward,
